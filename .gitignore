@@ -1,0 +1,16 @@
+.idea
+.code
+Thumbs.db
+.DS_Store
+._.DS_Store
+*.log
+*.xml
+/*.txt
+/*.html
+/*.sql
+/.htaccess
+bitrix/*
+upload/*
+/local/php_interface/constants.php
+/cgi-bin
+/web.config
