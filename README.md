@@ -2,6 +2,12 @@
 
 **Предполагается, что в папку 'www' уже установлен сайт Bitrix24 из другого репозитория - https://github.com/ArtemaMois/Bitrix24TestTask**
 
+Прописываем локально адрес **intershop.ru** в "C:\Windows\System32\drivers\etc\hosts":
+
+![image](https://github.com/user-attachments/assets/215f2339-838a-4625-93ad-e84bb3d8637f)
+
+
+
 
 Создаем новый сайт с доменным именем **intershop.ru** через меню в консоли.
 
