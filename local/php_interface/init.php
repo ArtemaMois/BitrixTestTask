@@ -15,7 +15,7 @@ function changeCanceledInBX24($orderId, $value, $description)
     try {
         $http = getHttpClient();
         $dealId = getDealByOrderId($orderId);
-        $updateDealStatusUrl = "https://" . getIp() . "/rest/1/6lwm51qd52y135tk/crm.deal.update.json?ID={$dealId}&FIELDS[STAGE_ID]=";
+        $updateDealStatusUrl = "https://task.ru/rest/1/6lwm51qd52y135tk/crm.deal.update.json?ID={$dealId}&FIELDS[STAGE_ID]=";
         if ($value == 'N') {
             $order = getOrderById($orderId);
             $orderStatus = $order->getField('STATUS_ID');
@@ -27,7 +27,7 @@ function changeCanceledInBX24($orderId, $value, $description)
             $updateDealStatusUrl .= $dealStatus;
             $http->get($updateDealStatusUrl);
             $json = $http->getResult();
-            file_put_contents($_SERVER['DOCUMENT_ROOT'] . "/local/" . uniqid() . ".json", $json);
+            // file_put_contents($_SERVER['DOCUMENT_ROOT'] . "/local/" . uniqid() . ".json", $json);
         } else if ($value == 'Y') {
             $dealStatus = 'LOSE';
             $updateDealStatusUrl .= $dealStatus;
@@ -35,10 +35,10 @@ function changeCanceledInBX24($orderId, $value, $description)
         }
         $json = json_encode(['dealId' => $dealId, 'value' => $value, 'result' => $http->getResult()]);
 
-        file_put_contents($_SERVER['DOCUMENT_ROOT'] . "/local/" . uniqid() . ".json", $json);
+        // file_put_contents($_SERVER['DOCUMENT_ROOT'] . "/local/" . uniqid() . ".json", $json);
     } catch (Exception $e) {
         $json = json_encode(['error' => $e->getMessage()]);
-        file_put_contents($_SERVER['DOCUMENT_ROOT'] . "/local/" . uniqid() . ".json", $json);
+        // file_put_contents($_SERVER['DOCUMENT_ROOT'] . "/local/" . uniqid() . ".json", $json);
     }
 }
 
@@ -67,7 +67,7 @@ function changeOrderStatusInBX24($event)
         'P' => 'EXECUTING',
         'F' => 'WON'
     };
-    $http->get("https://" . getIp() . "/rest/1/13mobu4hbuzyc43p/crm.deal.update.json?ID={$dealId}&FIELDS[STAGE_ID]={$statusID}");
+    $http->get("https://task.ru/rest/1/13mobu4hbuzyc43p/crm.deal.update.json?ID={$dealId}&FIELDS[STAGE_ID]={$statusID}");
     $status = json_decode($http->getStatus());
     if ($status == 200); {
         return true;
@@ -79,7 +79,7 @@ function changeOrderStatusInBX24($event)
 function getDealByOrderId($orderId)
 {
     $http = getHttpClient();
-    $response = $http->get("https://" .  getIp() . "/rest/1/13mobu4hbuzyc43p/crm.deal.list.json?FILTER[ORIGIN_ID]={$orderId}&SELECT[]=ID");
+    $response = $http->get("https://task.ru/rest/1/13mobu4hbuzyc43p/crm.deal.list.json?FILTER[ORIGIN_ID]={$orderId}&SELECT[]=ID");
     return json_decode($response)->result[0]->ID;
 }
 
@@ -88,20 +88,24 @@ function getDealByOrderId($orderId)
 // создание сделки в BX24
 function sendOrderInBX24($orderId, $fields, $orderFields, $isNew)
 {
-    if ($isNew == 1) {
-        try {
-            $user = getCurrentUserData();
-            $contactId = getContactId($user);
-            $products = getProductsByOrderId($orderId);
-            $productsQuantity = getProductsQuantity($orderId);
-            $dealProducts = getProductFromBX24($products, $productsQuantity);
-            $opportunity = getOrderOpportunity($orderId);
-            $dealId = makeDeal($contactId, "RUB", $orderId, $opportunity);
-            attachProductsToDeal($dealId, $dealProducts);
-            makeInvoice($contactId, $dealId, $opportunity, $dealProducts);
-        } catch (Exception $e) {
-            preDump($e->getMessage());
+    try {
+        if ($isNew == 1) {
+            try {
+                $user = getCurrentUserData();
+                $contactId = getContactId($user);
+                $products = getProductsByOrderId($orderId);
+                $productsQuantity = getProductsQuantity($orderId);
+                $dealProducts = getProductFromBX24($products, $productsQuantity);
+                $opportunity = getOrderOpportunity($orderId);
+                $dealId = makeDeal($contactId, "RUB", $orderId, $opportunity);
+                attachProductsToDeal($dealId, $dealProducts);
+                makeInvoice($contactId, $dealId, $opportunity, $dealProducts);
+            } catch (Exception $e) {
+                preDump($e->getMessage());
+            }
         }
+    } catch (Exception $e) {
+        // file_put_contents($_SERVER['DOCUMENT_ROOT'] . "/local/" . uniqid() . ".json", json_encode([$e->getMessage(), $e->getTraceAsString(), $e->getLine()]));
     }
 }
 
@@ -138,7 +142,7 @@ function getOrderOpportunity($orderId)
 function makeDeal(int $contactId, string $currency, int $orderId, int $opportunity, $endDate = null)
 {
     $http = getHttpClient();
-    $newDealUrl = "https://" . getIp() . "/rest/1/fui3z67mkji7kjj0/crm.deal.add.json?FIELDS[CONTACT_ID]=$contactId&FIELDS[CURRENCY_ID]=$currency&FIELDS[OPENED]=Y&FIELDS[ORIGIN_ID]={$orderId}&FIELDS[IS_MANUAL_OPPORTUNITY]=Y&FIELDS[OPPORTUNITY]={$opportunity}";
+    $newDealUrl = "https://task.ru/rest/1/fui3z67mkji7kjj0/crm.deal.add.json?FIELDS[CONTACT_ID]=$contactId&FIELDS[CURRENCY_ID]=$currency&FIELDS[OPENED]=Y&FIELDS[ORIGIN_ID]={$orderId}&FIELDS[IS_MANUAL_OPPORTUNITY]=Y&FIELDS[OPPORTUNITY]={$opportunity}";
     $http->get($newDealUrl);
     $response = json_decode($http->getResult());
     $dealId = $response->result;
@@ -149,7 +153,7 @@ function attachProductsToDeal(int $dealId, $products)
 {
     $http = getHttpClient();
     $productsUrl = makeQueryStringForProductAddToDeal($products);
-    $attachProuctsUrl = "https://" . getIp() . "/rest/1/fui3z67mkji7kjj0/crm.deal.productrows.set.json?id={$dealId}" . $productsUrl;
+    $attachProuctsUrl = "https://task.ru/rest/1/fui3z67mkji7kjj0/crm.deal.productrows.set.json?id={$dealId}" . $productsUrl;
     $http->get($attachProuctsUrl);
 }
 // создает строку запроса для добавления товара в сделку
@@ -214,7 +218,7 @@ function getProductFromBX24(array $products, array $productQuantities)
     if (CModule::IncludeModule("sale")) {
         foreach ($products as $product) {
             $productNameForQuery = replaceSpaceToPlus($product['NAME']);
-            $webhookUrl = "https://" . getIp() . "/rest/1/fui3z67mkji7kjj0/crm.product.list.json?SELECT[]=NAME&SELECT[]=ID&SELECT[]=PRICE&FILTER[NAME]={$productNameForQuery}";
+            $webhookUrl = "https://task.ru/rest/1/fui3z67mkji7kjj0/crm.product.list.json?SELECT[]=NAME&SELECT[]=ID&SELECT[]=PRICE&FILTER[NAME]={$productNameForQuery}";
             $http->get($webhookUrl);
             $response = json_decode($http->getResult());
             if (count($response->result) != 0) {
@@ -229,6 +233,7 @@ function getProductFromBX24(array $products, array $productQuantities)
             } else {
                 $newBx24Product = makeNewProductInBX24($product);
                 $bx24Products[$newBx24Product['PRODUCT_ID']] = $newBx24Product;
+                updateProductStorageInBX24($newBx24Product['PRODUCT_ID'], $product['ID']);
             }
         }
         return $bx24Products;
@@ -237,12 +242,33 @@ function getProductFromBX24(array $products, array $productQuantities)
     }
 }
 
+// обновление количества товара в BX24
+function updateProductStorageInBX24(int $bx24ProductId,int $productId)
+{
+    if(\Bitrix\Main\Loader::includeModule('catalog'))
+    {
+        $response = \CCatalogStoreProduct::GetList([], [
+            'PRODUCT_ID' => $productId
+        ], false, false, ['AMOUNT']);
+        $storageProduct = $response->Fetch();
+        $amount = $storageProduct['AMOUNT'];
+        $http = getHttpClient();
+        $params = [
+            'PRODUCT_ID' => $bx24ProductId,
+            'AMOUNT' => $amount
+        ];
+        $http->post("https://task.ru/api/products/storage/", $params);
+        // file_put_contents($_SERVER['DOCUMENT_ROOT'] . "/local/" . uniqid() . ".json", json_encode($http->getResult()));
+    }
+}
+
+
 // создание нового продукта
 function makeNewProductInBX24(array $product)
 {
     $http = getHttpClient();
     $product['NAME'] = replaceSpaceToPlus($product['NAME']);
-    $webhookUrl = "https://" . getIp() . "/rest/1/fui3z67mkji7kjj0/crm.product.add.json?FIELDS[NAME]={$product['NAME']}&FIELDS[PRICE]={$product['PRICE']}&FIELDS[CURRENCY_ID]=RUB";
+    $webhookUrl = "https://task.ru/rest/1/fui3z67mkji7kjj0/crm.product.add.json?FIELDS[NAME]={$product['NAME']}&FIELDS[PRICE]={$product['PRICE']}&FIELDS[CURRENCY_ID]=RUB&FIELDS[MEASURE]=5";
     $http->get($webhookUrl);
     $response = json_decode($http->getResult());
     $newBx24Product = [
@@ -250,6 +276,7 @@ function makeNewProductInBX24(array $product)
         'PRODUCT_NAME' => $product['NAME'],
         'PRICE' => $product['PRICE'],
         'MEASURE_NAME' => 'шт',
+        "MEASURE_CODE" => 796,
         "QUANTITY" => 1
     ];
     return $newBx24Product;
@@ -274,7 +301,7 @@ function getContactId(array $user)
 // создание строки с параметрами для извлечения контакта, если он есть
 function makeContactListString(array $user)
 {
-    $webhookUrl = "https://" . getIp() . "/rest/1/q124p5ojbu8b7bxt/crm.contact.list.json?";
+    $webhookUrl = "https://task.ru/rest/1/q124p5ojbu8b7bxt/crm.contact.list.json?";
     $select = "SELECT[]=ID&SELECT[]=EMAIL&";
     $filter = "FILTER[EMAIL][VALUE]={$user['email']}&FILTER[NAME]={$user['name']}&FILTER[LAST_NAME]={$user['lastName']}&FILTER[SECOND_NAME]={$user['secondName']}&ORDER[DATE_CREATE]=DESC";
     $url = $webhookUrl . $select . $filter;
@@ -296,7 +323,7 @@ function checkContactExists(array $user)
 function makeQueryStringForNewContact(array $user)
 {
     //     $http->get("https://192.168.31.50/rest/1/5droh0w6kjqi5mi2/crm.contact.add.json?FIELDS[NAME]={$name}&FIELDS[SECOND_NAME]={$secondName}&FIELDS[LAST_NAME]={$lastName}&FIELDS[EMAIL][VALUE]={$email}");
-    $webhookUrl = "https://" . getIp() . "/rest/1/fui3z67mkji7kjj0/crm.contact.add.json?";
+    $webhookUrl = "https://task.ru/rest/1/fui3z67mkji7kjj0/crm.contact.add.json?";
     $fields = "FIELDS[NAME]={$user['name']}&FIELDS[SECOND_NAME]={$user['secondName']}&FIELDS[LAST_NAME]={$user['lastName']}&FIELDS[EMAIL][][VALUE]={$user['email']}&FIELDS[EMAIL][][VALUE_TYPE]=WORK&FIELDS[OPENED]=Y";
     $url = $webhookUrl . $fields;
     return $url;
@@ -325,7 +352,7 @@ function makeInvoice(int $contactId, int $dealId, int $price, array $products, i
     $http = getHttpClient();
     $orderTopic = replaceSpaceToPlus("Сделка №{$dealId}");
     $productRow = getInvoiceProductRow($products);
-    $url = "https://" . getIp() . "/rest/1/lunqs8wn0w5eyxh9/crm.invoice.add.json?FIELDS[ORDER_TOPIC]={$orderTopic}&FIELDS[PERSON_TYPE_ID]=4&FIELDS[PAY_SYSTEM_ID]=4&FIELDS[STATUS_ID]=N&FIELDS[PRICE]={$price}.00&FIELDS[CURRENCY]={$currency}&FIELDS[UF_CONTACT_ID]={$contactId}&FIELDS[UF_DEAL_ID]={$dealId}&" . $productRow;
+    $url = "https://task.ru/rest/1/lunqs8wn0w5eyxh9/crm.invoice.add.json?FIELDS[ORDER_TOPIC]={$orderTopic}&FIELDS[PERSON_TYPE_ID]=4&FIELDS[PAY_SYSTEM_ID]=4&FIELDS[STATUS_ID]=N&FIELDS[PRICE]={$price}.00&FIELDS[CURRENCY]={$currency}&FIELDS[UF_CONTACT_ID]={$contactId}&FIELDS[UF_DEAL_ID]={$dealId}&" . $productRow;
     $http->get($url);
     $result = $http->getResult();
 }

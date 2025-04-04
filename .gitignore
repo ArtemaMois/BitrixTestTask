@@ -10,6 +10,7 @@ Thumbs.db
 /*.sql
 /.htaccess
 bitrix/*
+/local/*.json
 upload/*
 /local/php_interface/constants.php
 /cgi-bin

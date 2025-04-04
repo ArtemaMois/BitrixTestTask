@@ -63,8 +63,34 @@ $productId = 7; // Замените на ваш ID товара
 // try{
 
 
-$order = \Bitrix\Sale\Order::load(49);
-preDump($order->getField('STATUS_ID'));
+// $order = \Bitrix\Sale\Order::load(49);
+
+// $http = getHttpClient();
+
+// \Bitrix\Main\Loader::includeModule('catalog');
+// $productIds = [];
+// $orderBasket = CSaleBasket::GetList([], ["ORDER_ID" => 48]);
+// while ($item = $orderBasket->GetNext()) {
+    // $products[$item["ID"]] = [
+    //     'ID' => $item['ID'],
+    //     'NAME' => $item['NAME'],
+    //     'PRICE' => $item['PRICE'],
+    // ];
+    // $productIds[] = $item['ID'];
+//     $response = \CCatalogStoreProduct::GetList([], [
+//         'PRODUCT_ID' => $item['ID']
+//     ], false, false, ['AMOUNT']);
+//     $storageProduct = $response->Fetch();
+//     preDump($storageProduct);
+// }
+
+// $arrData = [
+//     "PRODUCT_ID" => $productIds,
+//     "AMOUNT" => 120
+// ];
+// $http->post("https://task.ru/api/products/storage/", $arrData);
+// preDump($http->getResult());
+// preDump($order->getField('STATUS_ID'));
 // $order->setField('CANCELED', 'Y');
 // preDump($order);
 //     $basket = $order->getBasket();
